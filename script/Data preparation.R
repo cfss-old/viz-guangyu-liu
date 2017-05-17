@@ -334,9 +334,9 @@ raw_data <- read.csv("data/raw_data.csv") %>%
 
 # BY, F1 and F2 Standardized Test Percentile (composite - reading and math)
   raw_data <- mutate(raw_data, 
-                     BY_perc = cume_dist(BY_stdsc_c) * 100,
-                     F1_perc = cume_dist(F1_stdsc_c) * 100,
-                     F2_perc = cume_dist(F2_stdsc_c) * 100)
+                     BY_perc_c = cume_dist(BY_stdsc_c) * 100,
+                     F1_perc_c = cume_dist(F1_stdsc_c) * 100,
+                     F2_perc_c = cume_dist(F2_stdsc_c) * 100)
   # All Four Disciplines
   raw_data <- mutate(raw_data,
                      BY_perc_r = cume_dist(BY_stdsc_r) * 100,
