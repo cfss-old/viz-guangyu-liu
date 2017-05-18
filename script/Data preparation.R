@@ -331,7 +331,7 @@ raw_data <- read.csv("data/raw_data.csv") %>%
 
 # Standardize variables
   standardize <- function(v) {
-    return (v - mean(v, na.rm = TRUE)) / sd(v, na.rm = TRUE)
+    return ((v - mean(v, na.rm = TRUE)) / sd(v, na.rm = TRUE))
   }
   
 # Origin Family's SES Percentile
@@ -410,3 +410,4 @@ raw_data <- read.csv("data/raw_data.csv") %>%
   
 # Write data
   write_csv(nels88, "data/nels88.csv")
+  
