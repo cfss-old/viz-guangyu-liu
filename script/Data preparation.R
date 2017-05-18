@@ -250,7 +250,7 @@ raw_data <- read.csv("data/raw_data.csv") %>%
                                        "Ph.D or a professional degree"))
   detach(raw_data)
 
-# Compute prestige for F3 and F4 occupations, based on NORC - 1980 Census Occupational Category
+  # Compute prestige for F3 and F4 occupations, based on NORC - 1980 Census Occupational Category
   raw_data <- mutate(raw_data, F3_prestige = NA)
   
   attach(raw_data)
@@ -328,29 +328,34 @@ raw_data <- read.csv("data/raw_data.csv") %>%
   raw_data$F4_prestige[F4_occ == "Unemployed-other"] <- 0.00
   
   detach(raw_data)
-    
+
+# Standardize variables
+  standardize <- function(v) {
+    return (v - mean(v, na.rm = TRUE) / sd(v, na.rm = TRUE))
+  }
+  
 # Origin Family's SES Percentile
-  raw_data <- mutate(raw_data, Ori_perc = cume_dist(BY_SES) * 100)
+  raw_data <- mutate(raw_data, Ori_z = standardize(BY_SES))
 
 # BY, F1 and F2 Standardized Test Percentile (composite - reading and math)
   raw_data <- mutate(raw_data, 
-                     BY_perc_c = cume_dist(BY_stdsc_c) * 100,
-                     F1_perc_c = cume_dist(F1_stdsc_c) * 100,
-                     F2_perc_c = cume_dist(F2_stdsc_c) * 100)
+                     BY_z_c = standardize(BY_stdsc_c),
+                     F1_z_c = standardize(F1_stdsc_c),
+                     F2_z_c = standardize(F2_stdsc_c))
   # All Four Disciplines
   raw_data <- mutate(raw_data,
-                     BY_perc_r = cume_dist(BY_stdsc_r) * 100,
-                     BY_perc_m = cume_dist(BY_stdsc_m) * 100,
-                     BY_perc_s = cume_dist(BY_stdsc_s) * 100,
-                     BY_perc_h = cume_dist(BY_stdsc_h) * 100,
-                     F1_perc_r = cume_dist(F1_stdsc_r) * 100,
-                     F1_perc_m = cume_dist(F1_stdsc_m) * 100,
-                     F1_perc_s = cume_dist(F1_stdsc_s) * 100,
-                     F1_perc_h = cume_dist(F1_stdsc_h) * 100,
-                     F2_perc_r = cume_dist(F2_stdsc_r) * 100,
-                     F2_perc_m = cume_dist(F2_stdsc_m) * 100,
-                     F2_perc_s = cume_dist(F2_stdsc_s) * 100,
-                     F2_perc_h = cume_dist(F2_stdsc_h) * 100)
+                     BY_z_r = standardize(BY_stdsc_r),
+                     BY_z_m = standardize(BY_stdsc_m),
+                     BY_z_s = standardize(BY_stdsc_s),
+                     BY_z_h = standardize(BY_stdsc_h),
+                     F1_z_r = standardize(F1_stdsc_r),
+                     F1_z_m = standardize(F1_stdsc_m),
+                     F1_z_s = standardize(F1_stdsc_s),
+                     F1_z_h = standardize(F1_stdsc_h),
+                     F2_z_r = standardize(F2_stdsc_r),
+                     F2_z_m = standardize(F2_stdsc_m),
+                     F2_z_s = standardize(F2_stdsc_s),
+                     F2_z_h = standardize(F2_stdsc_h))
   
 # F3 and F4 Compute Respondent's SES Percentile
   # Calculate F3_edu
@@ -384,21 +389,24 @@ raw_data <- read.csv("data/raw_data.csv") %>%
 
   raw_data <- select(raw_data, -F4_edu, F4_edu = F4_edu2)
   
-  # Calculate F3 and F4 SES percentile
-  raw_data <- mutate(raw_data, 
-                     F3_edu_perc = cume_dist(raw_data$F3_edu) * 100,
-                     F3_occ_perc = cume_dist(raw_data$F3_prestige) * 100,
-                     F3_inc_perc = cume_dist(raw_data$F3_inc) * 100,
-                     F4_edu_perc = cume_dist(raw_data$F4_edu) * 100,
-                     F4_occ_perc = cume_dist(raw_data$F4_prestige) * 100,
-                     F4_inc_perc = cume_dist(raw_data$F4_inc) * 100)
+  # Standardize each composite, income + 1 to avoid log(0)
   raw_data <- mutate(raw_data,
-                     F3_com_perc = cume_dist(raw_data$F3_edu_perc + raw_data$F3_occ_perc + raw_data$F3_inc_perc),
-                     F4_com_perc = cume_dist(raw_data$F4_edu_perc + raw_data$F4_occ_perc + raw_data$F4_inc_perc))
+                     F3_edu_z = standardize(as.numeric(raw_data$F3_edu)),
+                     F3_occ_z = standardize(raw_data$F3_prestige),
+                     F3_inc_z = standardize(log(raw_data$F3_inc + 1)),
+                     F4_edu_z = standardize(as.numeric(raw_data$F4_edu)),
+                     F4_occ_z = standardize(raw_data$F4_prestige),
+                     F4_inc_z = standardize(log(raw_data$F4_inc + 1)))
+  
+  # Calculate composite SES score = sum of edu, occ, and inc, each has equal weight. Then standardize
+  index3 <- c("F3_edu_z", "F3_occ_z", "F3_inc_z")
+  index4 <- c("F4_edu_z", "F4_occ_z", "F4_inc_z")
+  raw_data <- mutate(raw_data,
+                     F3_com_z = standardize(rowSums(raw_data[index3], na.rm = TRUE)),
+                     F4_com_z = standardize(rowSums(raw_data[index4], na.rm = TRUE)))
 
 # Select demographic variables and all rankings (percentile)
-  nels88 <- select(raw_data, ID, BY_momedu, BY_dadedu, sex, race, BY_faminc, contains("perc"))
+  nels88 <- select(raw_data, ID, BY_momedu, BY_dadedu, sex, race, BY_faminc, contains("_z"))
   
 # Write data
   write_csv(nels88, "data/nels88.csv")
-  
