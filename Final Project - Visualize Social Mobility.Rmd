@@ -1,0 +1,431 @@
+---
+title: "Final Project: Visualize Social Mobility"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    orientation: rows
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(plotly)
+library(knitr)
+
+nels88 <- read.csv("data/nels88.csv")
+
+# Modify levels of parents' education
+nels88$BY_momedu <- factor(nels88$BY_momedu, 
+                           levels = c("PhD, M.D., etc.", "Masters Degree", "Graduated College", 
+                                      "College Less Than 4 Years", "Junior College", "Graduated High School", 
+                                      "Not finish High School"))
+nels88$BY_dadedu <- factor(nels88$BY_dadedu, 
+                           levels = c("PhD, M.D., etc.", "Masters Degree", "Graduated College", 
+                                      "College Less Than 4 Years", "Junior College", "Graduated High School", 
+                                      "Not finish High School"))
+```
+
+Input {.sidebar}
+=======================================
+
+```{r}
+selectizeInput(inputId = "eduRankBase",
+               label = "During K-12 education, rank respondents based on their standardized score of subject:",
+               choices = c("Composite (Reading and Math)", "Reading", "Math", "History", "Science"),
+               selected = "Composite (Reading and Math)")
+selectizeInput(inputId = "gradRankBase",
+               label = "After high school, rank respondents based on:",
+               choices = c("Education", "Occupational prestige", "Income", "SES"),
+               selected = "SES")
+selectizeInput(inputId = "colorBy",
+               label = "Compare respondents from different:",
+               choices = c("Sex", "Race", "Mother's education", 
+                           "Father's education", "Family income", "Family SES"),
+               selected = "Sex")
+```
+
+
+Introduction
+=======================================
+
+### Method
+A problem of Duncan's socioeconomic index is that the occupations included are outdated.    
+    
+Only the respondent's primary job is included, since usually people's social status is defined by their main occupation
+
+The occupations are converted into occupational prestiges based on [Norc 1980 Census Occupational Scores](http://ibgwww.colorado.edu/~agross/NNSD/prestige%20scores.html). Military prestige is based on the 2010 Census category. When there is no verbatical correspondent occupation categories, an average of related categories' prestiges are used
+
+Exploratory Graphs
+=======================================
+
+Column {data-width = 400}
+---------------------------------------
+
+```{r}
+# Define what variables are going to show on x-axis, based on user's input
+# Ori is fixed; the rest are changeable
+Ori <- "Ori_z"
+BY <- reactive({
+  ifelse (input$eduRankBase == "Composite (Reading and Math)","BY_z_c",
+              ifelse(input$eduRankBase == "Reading", "BY_z_r",
+                     ifelse(input$eduRankBase == "Math", "BY_z_m",
+                            ifelse(input$eduRankBase == "Science", "BY_z_s", "BY_z_h"))))
+})
+F1 <- reactive({
+  ifelse (input$eduRankBase == "Composite (Reading and Math)","F1_z_c",
+              ifelse(input$eduRankBase == "Reading", "F1_z_r",
+                     ifelse(input$eduRankBase == "Math", "F1_z_m",
+                            ifelse(input$eduRankBase == "Science", "F1_z_s", "F1_z_h"))))
+})
+F2 <- reactive({
+  ifelse (input$eduRankBase == "Composite (Reading and Math)","F2_z_c",
+              ifelse(input$eduRankBase == "Reading", "F2_z_r",
+                     ifelse(input$eduRankBase == "Math", "F2_z_m",
+                            ifelse(input$eduRankBase == "Science", "F2_z_s", "F2_z_h"))))
+})
+F3 <- reactive({
+  ifelse(input$gradRankBase == "SES", "F3_com_z", 
+             ifelse(input$gradRankBase == "Education", "F3_edu_z",
+                    ifelse(input$gradRankBase == "Occupational prestige", "F3_occ_z", "F3_inc_z")))
+})
+F4 <- reactive({
+  ifelse(input$gradRankBase == "SES", "F4_com_z", 
+             ifelse(input$gradRankBase == "Education", "F4_edu_z",
+                    ifelse(input$gradRankBase == "Occupational prestige", "F4_occ_z", "F4_inc_z")))
+})
+C <- reactive({
+  ifelse(input$colorBy == "Sex", "sex",
+         ifelse(input$colorBy == "Race", "race",
+                ifelse(input$colorBy == "Mother's education", "BY_momedu",
+                       ifelse(input$colorBy == "Father's education", "BY_dadedu",
+                              ifelse(input$colorBy == "Family income", "BY_faminc", "BY_SES")))))
+})
+gTibble <- ""
+doc <- ""
+
+```
+
+```{r}
+# Generate line chart
+plotOutput(outputId = "lineChart")
+
+output$lineChart <- renderPlot({
+
+  # If the user chooses the color channel to display a continuous variable, 
+  # then divide this variable into four categories
+  attach(nels88)
+  if (is.numeric(get(C()))){
+    nels88 <- mutate(nels88, Group = as.factor(as.numeric(cut(get(C()), 4))))
+    nels88$Group <- factor(nels88$Group,
+                       levels = rev(levels(nels88$Group)),
+                       labels = c("Top 25%", "Above Average 25%", "Below Average 25%", "Bottom 25%"))
+  } else {
+    nels88 <- mutate(nels88, Group = get(C()))
+  }
+  detach(nels88)
+
+  # Prepare the tibble for line chart and stat table
+  gTibble <- nels88[, c("ID", C(), "Group", Ori, BY(), F1(), F2(), F3(), F4())] %>% 
+    drop_na(Group) %>% 
+    # Half of the nels88 data, approximately 6000 observations. 
+    # Otherwise the smoothline will be too slow
+    # Have tested that half of the sample size could generate 
+    # ralatively similar graphs as using the whole sample size
+    sample_frac(size = 0.005, replace = FALSE) %>% 
+    gather(-ID, -get(C()), -Group, key = "Year", value = "zScore")
+  
+  gTibble$Year <- factor(gTibble$Year,
+                         levels = c(Ori, BY(), F1(), F2(), F3(), F4()))
+
+  # Line chart -- Using `loess` method to get a better appearance, but it's slow
+  ggplot(gTibble) +
+    geom_smooth(mapping = aes(x = Year, y = zScore, group = Group, color = Group), 
+              size = 1, se = FALSE, method = "loess") +
+    scale_x_discrete(name = "Time",
+                     labels = c("SES of Family of Origin", "Grade 8", "Grade 10", 
+                                "Grade 12", "Grade 12 + 2", "Grade 12 + 8"),
+                     na.translate = FALSE) +
+    scale_y_continuous(name = "# of Standard Deviation from the Mean") +
+    scale_color_discrete(name = "") 
+})
+
+```
+
+Statistical Analysis 
+=======================================
+
+Row {.tabset data-height=850}
+---------------------------------------
+
+### Grade 8
+
+```{r}
+tableOutput(outputId = "g8Table")
+
+reg_BY <- reactive({
+  lm(get(BY()) ~ sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g8Table <- renderTable({
+  Tbl_Doc(reg_BY(), "8th grade status")[[1]]
+})
+
+Tbl_Doc <- function(reg_BY, Y){
+  results <- bind_cols(as.data.frame(attributes(reg_BY$coefficients)$dimnames[[1]]), 
+                      as.data.frame(reg_BY$coefficients))
+  names(results) <- c("Variables", "Coefficients", "Std. Error", "t value", "p")
+  results$Variables <- as.character(results$Variables)
+  
+  # Keep 2 digits for coefficients, se, and t; 3 digits for p
+  results[, 2:4] <- round(results[, 2:4], digits = 2)
+  results[, 5] <- round(results[, 5] + 0.0001, digits = 3)
+  
+  # A loop to modify the table format and generate a document
+  i <- 1
+  if (results$p[i] < 0.001) {
+    results$p[i] <- paste(results$p[i], "***")
+  } else{
+    if (results$p[i] < 0.01) {
+      results$p[i] <- paste(results$p[i], "**")
+    } else{
+      if (results$p[i] < 0.05) {
+        results$p[i] <- paste(results$p[i], "*")
+      }
+    }
+  }
+  doc <- ""
+  for (i in c(1:(nrow(results) - 1))){
+    i <- i + 1
+    # Indicate significance
+    sig <- TRUE
+    if (as.numeric(results$p[i]) < 0.001){
+      results$p[i] <- paste(results$p[i], "***")
+    } else{
+      if (as.numeric(results$p[i]) < 0.01){
+        results$p[i] <- paste(results$p[i], "**")
+      } else{
+        if (as.numeric(results$p[i]) < 0.05){
+          results$p[i] <- paste(results$p[i], "*")
+        } else{
+          sig <- FALSE
+        }
+      }
+    }
+    
+    # Format variable names
+    if (grepl("sex", results$Variables[i])){
+      results$Variables[i] <- gsub("sex", "Sex - ", results$Variables[i])
+      base <- "Female"
+    } else {
+      if (grepl("race", results$Variables[i])){
+        results$Variables[i] <- gsub("race", "Race - ", results$Variables[i])
+        base <- "American Indian/Alaska Native"
+      } else {
+        if (grepl("edu", results$Variables[i])){
+          results$Variables[i] <- gsub("BY_momedu", "Mom's education - ", results$Variables[i])
+          results$Variables[i] <- gsub("BY_dadedu", "Dad's education - ", results$Variables[i])
+          base <- "College Less Than 4 Years"
+        } else{
+          if (grepl("faminc", results$Variables[i])){
+            results$Variables[i] <- gsub("BY_faminc", "Family income", results$Variables[i])
+          } else{
+            if (grepl("BY", results$Variables[i])){
+              results$Variables[i] <- "Grade 8 Status"
+            } else{
+              if (grepl("F1", results$Variables[i])){
+                results$Variables[i] <- "Grade 10 Status"
+              } else{
+                if (grepl("F2", results$Variables[i])){
+                  results$Variables[i] <- "Grade 12 Status"
+                } else {
+                  results$Variables[i] <- "Grade 12 + 2 Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    # Statistical analysis
+    if (sig){
+      if (results$Variables[i] == "Family income" | grepl("Grade", results$Variables[i])){ # Continuous variable
+        doc <- paste(doc, "One unit increase in <b>", 
+                     results$Variables[i], 
+                     "</b> is associated with <font color = 'red'>", 
+                     results$Coefficients[i])
+        if (results$Coefficients[i] >= 0) {
+          doc <- paste(doc, "increase </font>")
+        } else {
+          doc <- paste(doc, "decrease </font>")
+        }
+        doc <- paste(doc, "in ", Y, ".<br/>")
+      } else { # Categorical variable, compare with the base category
+        doc <- paste(doc, "<b>", results$Variables[i], 
+                     "</b> is associated with <font color = 'red'>",
+                     results$Coefficients[i])
+        if (results$Coefficients[i] >= 0) {
+          doc <- paste(doc, "increase </font>")
+        } else {
+          doc <- paste(doc, "decrease </font>")
+        }
+        doc <- paste(doc, "in ", Y, "comparing to ", base, ".<br/>")
+      }
+    }
+  }
+  list(x = results, y = doc)
+  #!!! Income seems to be log version, needs change before interpretation
+}
+```
+
+### Grade 10
+
+```{r}
+tableOutput(outputId = "g10Table")
+
+reg_F1 <- reactive({
+  lm(get(F1()) ~ get(BY()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g10Table <- renderTable({
+  Tbl_Doc(reg_F1(), "10th grade status")[[1]]
+})
+```
+
+
+### Grade 12
+
+```{r}
+tableOutput(outputId = "g12Table")
+
+reg_F2 <- reactive({
+  lm(get(F2()) ~ get(BY()) + get(F1()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g12Table <- renderTable({
+  Tbl_Doc(reg_F2(), "12th grade status")[[1]]
+})
+```
+
+
+### Grade 12 + 2
+
+```{r}
+tableOutput(outputId = "g14Table")
+
+reg_F3 <- reactive({
+  lm(get(F3()) ~ get(BY()) + get(F1()) + get(F2()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g14Table <- renderTable({
+  Tbl_Doc(reg_F3(), "Grade 12 + 2 status")[[1]]
+})
+```
+
+### Grade 12 + 8
+
+```{r}
+tableOutput(outputId = "g20Table")
+
+reg_F4 <- reactive({
+  lm(get(F4()) ~ get(BY()) + get(F1()) + get(F2()) + get(F3()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, 
+     data = nels88) %>% 
+  summary()
+})
+
+output$g20Table <- renderTable({
+  Tbl_Doc(reg_F4(), "Grade 12 + 8 status")[[1]]
+})
+```
+
+
+Row {.tabset}
+----------------------------------
+
+### Grade 8
+
+```{r}
+htmlOutput(outputId = "g8Doc")
+
+reg_BY <- reactive({
+  lm(get(BY()) ~ sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g8Doc <- renderUI({
+  HTML(Tbl_Doc(reg_BY(), "8th grade status")[[2]])
+})
+```
+
+
+### Grade 10
+
+```{r}
+htmlOutput(outputId = "g10Doc")
+
+reg_F1 <- reactive({
+  lm(get(F1()) ~ get(BY()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g10Doc <- renderUI({
+  HTML(Tbl_Doc(reg_F1(), "10th grade status")[[2]])
+})
+```
+
+### Grade 12
+
+```{r}
+htmlOutput(outputId = "g12Doc")
+
+reg_F2 <- reactive({
+  lm(get(F2()) ~ get(BY()) + get(F1()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
+  summary()
+})
+
+output$g12Doc <- renderUI({
+  HTML(Tbl_Doc(reg_F2(), "12th grade status")[[2]])
+})
+```
+
+### Grade 12 + 2
+
+```{r}
+htmlOutput(outputId = "g14Doc")
+
+reg_F3 <- reactive({
+  lm(get(F3()) ~ get(BY()) + get(F1()) + get(F2()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, 
+     data = nels88) %>% 
+  summary()
+})
+
+output$g14Doc <- renderUI({
+  HTML(Tbl_Doc(reg_F3(), "Grade 12 + 2 status")[[2]])
+})
+```
+
+
+### Grade 12 + 8
+
+```{r}
+htmlOutput(outputId = "g20Doc")
+
+reg_F4 <- reactive({
+  lm(get(F4()) ~ get(BY()) + get(F1()) + get(F2()) + get(F3()) + sex + race + BY_momedu + BY_dadedu + BY_faminc,
+     data = nels88) %>% 
+  summary()
+})
+
+output$g20Doc <- renderUI({
+  HTML(Tbl_Doc(reg_F4(), "Grade 12 + 8 status")[[2]])
+})
+```
+

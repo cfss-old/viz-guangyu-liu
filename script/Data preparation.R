@@ -406,7 +406,7 @@ raw_data <- read.csv("data/raw_data.csv") %>%
                      F4_com_z = standardize(rowSums(raw_data[index4], na.rm = TRUE)))
 
 # Select demographic variables and all rankings (percentile)
-  nels88 <- select(raw_data, ID, BY_momedu, BY_dadedu, sex, race, BY_faminc, contains("_z"))
+  nels88 <- select(raw_data, ID, BY_momedu, BY_dadedu, sex, race, BY_faminc, BY_SES, contains("_z"))
   
 # Write data
   write_csv(nels88, "data/nels88.csv")
