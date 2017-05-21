@@ -1,7 +1,7 @@
 README
 ================
 Guangyu Liu
-May 21, 2017
+Due: Jun 4, 2017
 
 The final project Shiny App can be found [here](https://gy-liu.shinyapps.io/final_project-visualize_social_mobility/#section-about). An introduction of the functionalities, method used, and features to be improved are in the "About" page. *The graph in "Exploratory Graphs" page may take a while to generate.*
 
