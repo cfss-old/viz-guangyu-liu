@@ -49,15 +49,45 @@ selectizeInput(inputId = "colorBy",
 ```
 
 
-Introduction
+About 
 =======================================
 
-### Method
-A problem of Duncan's socioeconomic index is that the occupations included are outdated.    
+<h3>Introduction</h3>
+In this Shiny App, I try to visualize the social mobility of a group of American respondents since their 8th grade. I employed data from NELS88/2000 (National Education Longitudinal Survey 1988 - 2000). 12,144 8th graders were first interviewed in 1988, and then followed up in 1990 (10th grade), 1992 (12th grade), 1994 (2 years after 12th grade), and 2000 (8 years after 12th grade). This App allows the user to define how social status is measured at each stage and to explore the mobility paths of different groups.     
+     
+<h3>How to Use</h3>
+<ul><li>Sidebar</li>   
+<ul><li><b>Status during K-12 education:</b> This select box defines which subject is used when evaluating respondents' academic abilities (Grade 8, Grade 10, and Grade 12). Users can choose from four subjects: reading, math, science, and history, or choose the composite score of reading and math.</li>    
+<li><b>Status after K-12 education:</b> This select box defines what criterion is used when evaluating respondents' social status after graduating from high school (Grade 12 + 2 and Grade 12 + 8). Available options include education, occupational prestige, income, and composite SES score.</li>     
+<li><b>Comparing categories:</b> This select box defines a demographic variable, according to which social mobility paths of different groups will be compared. If the user chooses a categorical variable, the original categories will be used. If the user chooses a continuous variable, it will be divided into quartiles.</li></ul>     
+       
+<li>Exploratory Graphs</li>
+<ul><li>This page generates a mobility path graph according to the user's choice.</li></ul>    
     
-Only the respondent's primary job is included, since usually people's social status is defined by their main occupation
+<li>Statistical Analysis</li>    
+<ul><li><b>Tables:</b> A regression analysis is run for each stage, showing how one's background and previous status affect his/her current social status.</li>    
+<li><b>Document:</b> According to the statistic results, a very crude analysis document is generated, translating the numbers into plain English. Only significant results are shown in the document.</li></ul></ul>
+  
+<h3>Method</h3>
 
-The occupations are converted into occupational prestiges based on [Norc 1980 Census Occupational Scores](http://ibgwww.colorado.edu/~agross/NNSD/prestige%20scores.html). Military prestige is based on the 2010 Census category. When there is no verbatical correspondent occupation categories, an average of related categories' prestiges are used
+The primary problem in social mobility is how to define one's status in a society. Considering my data, this can be divided into two questions: how to define one's status when one is enrolled in school, and how to define one's status when one is graduated.     
+    
+When one is enrolled in school (grade 8 to 12), standardized test scores measured their academic abilities comparing to their contemporaries. Studies usually use reading and math scores, because they are available in most standardized tests. NELS88/2000 also included science and history test scores. I included them in this App as well, to see how these subjects are affected by one's background, and how they are associated with one's development in the future.     
+    
+When one is not enrolled in school, scholars usually use SES (Social Economic Status) to define one's social position. Proxies of SES include education, occupational prestige, income, or a composition of these factors. In this study, only the respondent's primary job is included, since people's social status is usually defined by their main occupation. Each occupation is converted into an occupational prestige score based on [Norc 1980 Census Occupational Scores](http://ibgwww.colorado.edu/~agross/NNSD/prestige%20scores.html). Military prestige is based on the 2010 Census category. When there is no verbatim correspondent occupation categories, an average of related categories' prestige is used.     
+     
+The composite SES score is the average of education, occupational prestige, and income (after standardization). One problem of this, however, is that in the third follow up (when respondents were 2 years after grade 12), some respondents went to college while others entered the labor market. College students who only had a part-time job had lower income than those who took a full-time job, thus had a lower social status according to the definition of SES score, which might not be the true situation.
+
+<h3>Next Steps</h3>
+<ul><li>Exploratory Graphs</li>    
+    
+<ul><li>The x-axis should not be equally divided. There is a 6 years gap between the last two follow ups.</li></ul>    
+    
+<li>Statistic Analysis</li>   
+     
+<ul><li>The current statistic model (OLS) is actually biased, but I haven't figured out how to run HLM using R.</li>    
+<li>Could use indent to group automatically generated dummy variables.</li>
+<li>All the data is currently standardized, so the coefficient means one standard deviation increase in `x` is associated with how many standard deviations variation in `y`. But how large is a standard deviation? I need to translate that into the original data.</li></ul>
 
 Exploratory Graphs
 =======================================
@@ -135,7 +165,7 @@ output$lineChart <- renderPlot({
     # Otherwise the smoothline will be too slow
     # Have tested that half of the sample size could generate 
     # ralatively similar graphs as using the whole sample size
-    sample_frac(size = 0.005, replace = FALSE) %>% 
+    sample_frac(size = 0.5, replace = FALSE) %>% 
     gather(-ID, -get(C()), -Group, key = "Year", value = "zScore")
   
   gTibble$Year <- factor(gTibble$Year,
@@ -229,7 +259,7 @@ Tbl_Doc <- function(reg_BY, Y){
         if (grepl("edu", results$Variables[i])){
           results$Variables[i] <- gsub("BY_momedu", "Mom's education - ", results$Variables[i])
           results$Variables[i] <- gsub("BY_dadedu", "Dad's education - ", results$Variables[i])
-          base <- "College Less Than 4 Years"
+          base <- "PhD, M.D., etc."
         } else{
           if (grepl("faminc", results$Variables[i])){
             results$Variables[i] <- gsub("BY_faminc", "Family income", results$Variables[i])
