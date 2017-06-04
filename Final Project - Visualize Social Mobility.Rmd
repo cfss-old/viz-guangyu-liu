@@ -49,51 +49,32 @@ selectizeInput(inputId = "colorBy",
 ```
 
 
-About 
+Introduction 
 =======================================
 
-<h3>Introduction</h3>
-In this Shiny App, I try to visualize the social mobility of a group of American respondents since their 8th grade. I employed data from NELS88/2000 (National Education Longitudinal Survey 1988 - 2000). 12,144 8th graders were first interviewed in 1988, and then followed up in 1990 (10th grade), 1992 (12th grade), 1994 (2 years after 12th grade), and 2000 (8 years after 12th grade). This App allows the user to define how social status is measured at each stage and to explore the mobility paths of different groups.     
-     
-<h3>How to Use</h3>
-<ul><li>Sidebar</li>   
-<ul><li><b>Status during K-12 education:</b> This select box defines which subject is used when evaluating respondents' academic abilities (Grade 8, Grade 10, and Grade 12). Users can choose from four subjects: reading, math, science, and history, or choose the composite score of reading and math.</li>    
-<li><b>Status after K-12 education:</b> This select box defines what criterion is used when evaluating respondents' social status after graduating from high school (Grade 12 + 2 and Grade 12 + 8). Available options include education, occupational prestige, income, and composite SES score.</li>     
-<li><b>Comparing categories:</b> This select box defines a demographic variable, according to which social mobility paths of different groups will be compared. If the user chooses a categorical variable, the original categories will be used. If the user chooses a continuous variable, it will be divided into quartiles.</li></ul>     
-       
-<li>Exploratory Graphs</li>
-<ul><li>This page generates a mobility path graph according to the user's choice.</li></ul>    
+**About This Project**    
     
-<li>Statistical Analysis</li>    
-<ul><li><b>Tables:</b> A regression analysis is run for each stage, showing how one's background and previous status affect his/her current social status.</li>    
-<li><b>Document:</b> According to the statistic results, a very crude analysis document is generated, translating the numbers into plain English. Only significant results are shown in the document.</li></ul></ul>
-  
-<h3>Method</h3>
+In the field of sociology, many research questions are related to one’s status among a group of people, and how one’s status changes over time. For instance, the classic definition of “inter-generational mobility” explores the relationship between father’s education and son’s education, father’s occupation and son’s occupation, father’s income and son’s income, etc. Scholars interested in “intra-generational mobility” may want to examine one’s movement in a social hierarchy during his/her life span and to study how one’s current status is related to previous status. Educational researchers may want to learn the discrimination of a certain subject, e.g. the gender gap in math is getting wider or narrower as students move to higher grades. All three examples above concern status at different stages, but define status using different measurements, such as income, occupation, or standardized test score.    
+    
+This Shinny App aims at providing a tool for sociologist to explore such mobility. In the sidebar, users could choose how status is defined during and after K-12 education, and compare mobility trajectories between which groups based on their research interests. During K-12 education, standardized test scores of four subjects – reading, math, science, and history, as well as a composite score, which is the mean of reading and math scores, are provided. After K-12 education, user could choose one of four most common social status proxies – education, occupational prestige, income and social economic status (SES) score – to measure status.    
+    
+The purpose of this Shinny App is NOT to compare different measurements. Instead, I assume the user has a research question at hand, and chooses measurements at different stages accordingly. Therefore, the flexibility provide by Shinny allows the user to explore different questions with the same dataset. The “Exploratory Graph” section provides mobility trajectories of different groups, while the “Statistic Analysis” section offers detailed statistic results. This mimics the procedure of a social science study – have a research question, define measurements, graph the data to visualize the trend, and then test statistic hypothesis.    
+    
+**Data and Variables**    
+    
+For this project, I employed data from NELS88/00 (National Education Longitudinal Survey 1988 – 2000). 12,144 8th graders were first interviewed in 1988, and then followed up in 1990 (10th grade), 1992 (12th grade), 1994 (2 years after 12th grade), and 2000 (8 years after 12th grade). At the third follow up (1994, 2 years after 12th grade), respondents were in a period of transition. Some of them have entered the labor market, while others remain in higher education. It is difficult to find a unitary indicator to measure their status. Therefore, data from the third follow up are excluded from this analysis.
 
-The primary problem in social mobility is how to define one's status in a society. Considering my data, this can be divided into two questions: how to define one's status when one is enrolled in school, and how to define one's status when one is graduated.     
+For the occupational prestige option, only the respondent's primary job is included, since people's social status is usually defined by their main occupation. Each occupation is converted into an occupational prestige score based on [Norc 1980 Census Occupational Scores](http://ibgwww.colorado.edu/~agross/NNSD/prestige%20scores.html). Military prestige is based on the 2010 Census category. When there are no verbatim correspondent occupation categories, an average of related categories' prestige is used.     
     
-When one is enrolled in school (grade 8 to 12), standardized test scores measured their academic abilities comparing to their contemporaries. Studies usually use reading and math scores, because they are available in most standardized tests. NELS88/2000 also included science and history test scores. I included them in this App as well, to see how these subjects are affected by one's background, and how they are associated with one's development in the future.     
-    
-When one is not enrolled in school, scholars usually use SES (Social Economic Status) to define one's social position. Proxies of SES include education, occupational prestige, income, or a composition of these factors. In this study, only the respondent's primary job is included, since people's social status is usually defined by their main occupation. Each occupation is converted into an occupational prestige score based on [Norc 1980 Census Occupational Scores](http://ibgwww.colorado.edu/~agross/NNSD/prestige%20scores.html). Military prestige is based on the 2010 Census category. When there is no verbatim correspondent occupation categories, an average of related categories' prestige is used.     
-     
-The composite SES score is the average of education, occupational prestige, and income (after standardization). One problem of this, however, is that in the third follow up (when respondents were 2 years after grade 12), some respondents went to college while others entered the labor market. College students who only had a part-time job had lower income than those who took a full-time job, thus had a lower social status according to the definition of SES score, which might not be the true situation.
-
-<h3>Next Steps</h3>
-<ul><li>Exploratory Graphs</li>    
-    
-<ul><li>The x-axis should not be equally divided. There is a 6 years gap between the last two follow ups.</li></ul>    
-    
-<li>Statistic Analysis</li>   
-     
-<ul><li>The current statistic model (OLS) is actually biased, but I haven't figured out how to run HLM using R.</li>    
-<li>Could use indent to group automatically generated dummy variables.</li>
-<li>All the data is currently standardized, so the coefficient means one standard deviation increase in `x` is associated with how many standard deviations variation in `y`. But how large is a standard deviation? I need to translate that into the original data.</li></ul>
+For the 4th follow up, SES is defined as an average of education, occupational prestige, and annual income. This is inconsistent with the respondent’s original family’s SES, which is offered in the NELS data.
 
 Exploratory Graphs
 =======================================
 
-Column {data-width = 400}
+Row
 ---------------------------------------
+
+### Mobility Trajectory
 
 ```{r}
 # Define what variables are going to show on x-axis, based on user's input
@@ -132,7 +113,7 @@ C <- reactive({
          ifelse(input$colorBy == "Race", "race",
                 ifelse(input$colorBy == "Mother's education", "BY_momedu",
                        ifelse(input$colorBy == "Father's education", "BY_dadedu",
-                              ifelse(input$colorBy == "Family income", "BY_faminc", "BY_SES")))))
+                              ifelse(input$colorBy == "Family income", "BY_faminc", "Ori_z")))))
 })
 gTibble <- ""
 doc <- ""
@@ -146,316 +127,143 @@ plotOutput(outputId = "lineChart")
 output$lineChart <- renderPlot({
 
   # If the user chooses the color channel to display a continuous variable, 
-  # then divide this variable into four categories
+  # then divide this variable into five categories
   attach(nels88)
   if (is.numeric(get(C()))){
-    nels88 <- mutate(nels88, Group = as.factor(as.numeric(cut(get(C()), 4))))
+    nels88 <- mutate(nels88, Group = as.factor(as.numeric(cut(get(C()), 5))))
     nels88$Group <- factor(nels88$Group,
                        levels = rev(levels(nels88$Group)),
-                       labels = c("Top 25%", "Above Average 25%", "Below Average 25%", "Bottom 25%"))
+                       labels = c("Top 20%", "21 ~ 40%", "41 ~ 60%", "61 ~ 80%", "Bottom 20%"))
   } else {
     nels88 <- mutate(nels88, Group = get(C()))
   }
   detach(nels88)
 
   # Prepare the tibble for line chart and stat table
-  gTibble <- nels88[, c("ID", C(), "Group", Ori, BY(), F1(), F2(), F3(), F4())] %>% 
+  gTibble <- nels88[, c("ID", C(), "Group", Ori, BY(), F1(), F2(), F4())] %>% 
     drop_na(Group) %>% 
-    # Half of the nels88 data, approximately 6000 observations. 
-    # Otherwise the smoothline will be too slow
-    # Have tested that half of the sample size could generate 
-    # ralatively similar graphs as using the whole sample size
-    sample_frac(size = 0.5, replace = FALSE) %>% 
     gather(-ID, -get(C()), -Group, key = "Year", value = "zScore")
   
-  gTibble$Year <- factor(gTibble$Year,
-                         levels = c(Ori, BY(), F1(), F2(), F3(), F4()))
-
-  # Line chart -- Using `loess` method to get a better appearance, but it's slow
-  ggplot(gTibble) +
-    geom_smooth(mapping = aes(x = Year, y = zScore, group = Group, color = Group), 
-              size = 1, se = FALSE, method = "loess") +
-    scale_x_discrete(name = "Time",
-                     labels = c("SES of Family of Origin", "Grade 8", "Grade 10", 
-                                "Grade 12", "Grade 12 + 2", "Grade 12 + 8"),
-                     na.translate = FALSE) +
-    scale_y_continuous(name = "# of Standard Deviation from the Mean") +
-    scale_color_discrete(name = "") 
+  gTibble$Year[gTibble$Year == Ori] <- 1987
+  gTibble$Year[gTibble$Year == BY()] <- 1988
+  gTibble$Year[gTibble$Year == F1()] <- 1990
+  gTibble$Year[gTibble$Year == F2()] <- 1992
+  gTibble$Year[gTibble$Year == F4()] <- 2000
+  gTibble$Year <- as.numeric(gTibble$Year)
+      
+  # Piecewise regression with confidence interval
+  ggplot(mapping = aes(x = Year, y = zScore, group = Group, color = Group), size = 1) +
+    geom_smooth(data = filter(gTibble, Year == 1987 | Year == 1988), method = "lm", se = FALSE) +
+    geom_smooth(data = filter(gTibble, Year == 1988 | Year == 1990), method = "lm", se = FALSE) +
+    geom_smooth(data = filter(gTibble, Year == 1990 | Year == 1992), method = "lm", se = FALSE) +
+    geom_smooth(data = filter(gTibble, Year == 1992 | Year == 2000), method = "lm", se = FALSE) +
+    scale_x_continuous(name = "",
+                       breaks = c(1987, 1988, 1990, 1992, 2000),
+                       labels = c("Origin", "Grade 8", "Grade 10", "Grade 12", "Grade 12 + 8")) +
+    scale_y_continuous(name = "Relative position among contemporaries",
+                       labels = scales::percent) +
+    scale_color_discrete(name = "") +
+    theme(axis.text = element_text(size = 15),
+          axis.title = element_text(size = 15),
+          legend.text = element_text(size = 15))
 })
 
 ```
 
-Statistical Analysis 
-=======================================
+Row
+--------------------------------------
 
-Row {.tabset data-height=850}
----------------------------------------
+### Design and Method
 
-### Grade 8
+-	Y axis. There are two ways to measure one’s position in a social hierarchy – percentile and number of standard deviations from the mean. The problem of the former is that people on the top cannot move upward, thus it cannot show the degree of social inequality. When measured by standard deviation, people on the top can still move upwardly by enlarging their distance from the mean, but the disadvantage of this approach is the difficulty of interpretation, especially when the value of standard deviation varies across stages. For the sake of comparability and easiness of interpretation, I represent respondents’ status by their percentile among their contemporaries.    
+    
+-	X axis. ggplot2 maps categorical variables to x axis with equal intervals. However, there are 8 years gap between the 4th and 2nd follow up, while there are only 2 years between the first three waves. Map waves with equal interval will result in a steep change between the last two waves and bias the visualization. Therefore, I mapped the year of each wave (continuous variable) to x axis, and then label them as categorical variables.    
+    
+-	Confidence interval. It is useful to add confidence intervals to show if the difference between two groups is statistically significant. However, for this dataset, when there are multiple lines in the graph, the confidence interval makes it difficult to differentiate different lines. In addition, except for the neighborhood of intersection points, most confidence intervals do not overlap. To keep the visualization clean and clear, I turned off the confidence interval.    
+    
+Statistical Analysis
+=====================================
+
+Column {data-height=auto}
+-------------------------------
+
+### To what extent different group's previous status determines their current status
 
 ```{r}
-tableOutput(outputId = "g8Table")
-
-reg_BY <- reactive({
-  lm(get(BY()) ~ sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g8Table <- renderTable({
-  Tbl_Doc(reg_BY(), "8th grade status")[[1]]
-})
-
-Tbl_Doc <- function(reg_BY, Y){
-  results <- bind_cols(as.data.frame(attributes(reg_BY$coefficients)$dimnames[[1]]), 
-                      as.data.frame(reg_BY$coefficients))
-  names(results) <- c("Variables", "Coefficients", "Std. Error", "t value", "p")
-  results$Variables <- as.character(results$Variables)
-  
-  # Keep 2 digits for coefficients, se, and t; 3 digits for p
-  results[, 2:4] <- round(results[, 2:4], digits = 2)
-  results[, 5] <- round(results[, 5] + 0.0001, digits = 3)
-  
-  # A loop to modify the table format and generate a document
-  i <- 1
-  if (results$p[i] < 0.001) {
-    results$p[i] <- paste(results$p[i], "***")
-  } else{
-    if (results$p[i] < 0.01) {
-      results$p[i] <- paste(results$p[i], "**")
-    } else{
-      if (results$p[i] < 0.05) {
-        results$p[i] <- paste(results$p[i], "*")
-      }
-    }
+genResult <- function(){
+  attach(nels88)
+  if (is.numeric(get(C()))){
+    nels88 <- mutate(nels88, Group = as.factor(as.numeric(cut(get(C()), 5))))
+    nels88$Group <- factor(nels88$Group,
+                       levels = rev(levels(nels88$Group)),
+                       labels = c("Top 20%", "21 ~ 40%", "41 ~ 60%", "61 ~ 80%", "Bottom 20%"))
+  } else {
+    nels88 <- mutate(nels88, Group = get(C()))
   }
-  doc <- ""
-  for (i in c(1:(nrow(results) - 1))){
-    i <- i + 1
-    # Indicate significance
-    sig <- TRUE
-    if (as.numeric(results$p[i]) < 0.001){
-      results$p[i] <- paste(results$p[i], "***")
-    } else{
-      if (as.numeric(results$p[i]) < 0.01){
-        results$p[i] <- paste(results$p[i], "**")
-      } else{
-        if (as.numeric(results$p[i]) < 0.05){
-          results$p[i] <- paste(results$p[i], "*")
-        } else{
-          sig <- FALSE
-        }
+  detach(nels88)
+
+  tTibble <- nels88[, c("ID", C(), "Group", Ori, BY(), F1(), F2(), F4())] %>% 
+    drop_na(Group)
+  
+  result <- data.frame(Group = character(0), Regression = character(0), Coef = numeric(0), 
+                       SE = numeric(0), t = numeric(0), p = numeric(0))
+  for (i in levels(tTibble$Group)){
+      filt <- filter(tTibble, Group == i)
+      j <- 5
+      for (j in c(5:8)){
+        reg <- summary(lm(filt[, j]~filt[, j-1]))
+        result <- add_row(result, Group = i, Regression = j, Coef = reg$coef[2, 1], 
+                          SE = reg$coef[2, 2], t = reg$coef[2, 3], p = reg$coef[2, 4])
+        j <- j + 1
       }
     }
-    
-    # Format variable names
-    if (grepl("sex", results$Variables[i])){
-      results$Variables[i] <- gsub("sex", "Sex - ", results$Variables[i])
-      base <- "Female"
-    } else {
-      if (grepl("race", results$Variables[i])){
-        results$Variables[i] <- gsub("race", "Race - ", results$Variables[i])
-        base <- "American Indian/Alaska Native"
-      } else {
-        if (grepl("edu", results$Variables[i])){
-          results$Variables[i] <- gsub("BY_momedu", "Mom's education - ", results$Variables[i])
-          results$Variables[i] <- gsub("BY_dadedu", "Dad's education - ", results$Variables[i])
-          base <- "PhD, M.D., etc."
-        } else{
-          if (grepl("faminc", results$Variables[i])){
-            results$Variables[i] <- gsub("BY_faminc", "Family income", results$Variables[i])
-          } else{
-            if (grepl("BY", results$Variables[i])){
-              results$Variables[i] <- "Grade 8 Status"
-            } else{
-              if (grepl("F1", results$Variables[i])){
-                results$Variables[i] <- "Grade 10 Status"
-              } else{
-                if (grepl("F2", results$Variables[i])){
-                  results$Variables[i] <- "Grade 12 Status"
-                } else {
-                  results$Variables[i] <- "Grade 12 + 2 Status"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    # Statistical analysis
-    if (sig){
-      if (results$Variables[i] == "Family income" | grepl("Grade", results$Variables[i])){ # Continuous variable
-        doc <- paste(doc, "One unit increase in <b>", 
-                     results$Variables[i], 
-                     "</b> is associated with <font color = 'red'>", 
-                     results$Coefficients[i])
-        if (results$Coefficients[i] >= 0) {
-          doc <- paste(doc, "increase </font>")
-        } else {
-          doc <- paste(doc, "decrease </font>")
-        }
-        doc <- paste(doc, "in ", Y, ".<br/>")
-      } else { # Categorical variable, compare with the base category
-        doc <- paste(doc, "<b>", results$Variables[i], 
-                     "</b> is associated with <font color = 'red'>",
-                     results$Coefficients[i])
-        if (results$Coefficients[i] >= 0) {
-          doc <- paste(doc, "increase </font>")
-        } else {
-          doc <- paste(doc, "decrease </font>")
-        }
-        doc <- paste(doc, "in ", Y, "comparing to ", base, ".<br/>")
-      }
-    }
-  }
-  list(x = results, y = doc)
-  #!!! Income seems to be log version, needs change before interpretation
+
+  result$Regression <- factor(result$Regression, levels = c(5:8),
+                                                 labels = c("Grade 8 ~ Origin",
+                                                    "Grade 10 ~ Grade 8",
+                                                    "Grade 12 ~ Grade 10",
+                                                    "Grade 12 + 8 ~ Grade 12"))
+  result$Group <- ordered(result$Group, levels = rev(levels(nels88$Group)))
+  return (result)
 }
+
+plotOutput(outputId = "coefPlot")
+
+output$coefPlot <- renderPlot({
+  result <- as.data.frame(genResult())
+  ggplot(data = result, mapping = aes(x = Group, y = Coef, color = Group)) +
+    geom_linerange(aes(ymin = Coef - 2*SE, ymax = Coef + 2*SE), size = 1) +
+    geom_point(size = 2) +
+    labs(y = "Coefficients", x = NULL) +
+    theme(legend.position = "none",
+          axis.text = element_text(size = 12),
+          axis.title = element_text(size = 12)) +
+    scale_y_continuous(position = "right") +
+    coord_flip() +
+    facet_grid(Regression~.)
+
+})
+
 ```
 
-### Grade 10
+### Statistics
 
 ```{r}
-tableOutput(outputId = "g10Table")
+tableOutput(outputId = "regTbl")
 
-reg_F1 <- reactive({
-  lm(get(F1()) ~ get(BY()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g10Table <- renderTable({
-  Tbl_Doc(reg_F1(), "10th grade status")[[1]]
+output$regTbl <- renderTable({
+  genResult()
 })
 ```
 
-
-### Grade 12
-
-```{r}
-tableOutput(outputId = "g12Table")
-
-reg_F2 <- reactive({
-  lm(get(F2()) ~ get(BY()) + get(F1()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g12Table <- renderTable({
-  Tbl_Doc(reg_F2(), "12th grade status")[[1]]
-})
-```
-
-
-### Grade 12 + 2
-
-```{r}
-tableOutput(outputId = "g14Table")
-
-reg_F3 <- reactive({
-  lm(get(F3()) ~ get(BY()) + get(F1()) + get(F2()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g14Table <- renderTable({
-  Tbl_Doc(reg_F3(), "Grade 12 + 2 status")[[1]]
-})
-```
-
-### Grade 12 + 8
-
-```{r}
-tableOutput(outputId = "g20Table")
-
-reg_F4 <- reactive({
-  lm(get(F4()) ~ get(BY()) + get(F1()) + get(F2()) + get(F3()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, 
-     data = nels88) %>% 
-  summary()
-})
-
-output$g20Table <- renderTable({
-  Tbl_Doc(reg_F4(), "Grade 12 + 8 status")[[1]]
-})
-```
-
-
-Row {.tabset}
+Column
 ----------------------------------
 
-### Grade 8
+### Design and Method
 
-```{r}
-htmlOutput(outputId = "g8Doc")
-
-reg_BY <- reactive({
-  lm(get(BY()) ~ sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g8Doc <- renderUI({
-  HTML(Tbl_Doc(reg_BY(), "8th grade status")[[2]])
-})
-```
-
-
-### Grade 10
-
-```{r}
-htmlOutput(outputId = "g10Doc")
-
-reg_F1 <- reactive({
-  lm(get(F1()) ~ get(BY()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g10Doc <- renderUI({
-  HTML(Tbl_Doc(reg_F1(), "10th grade status")[[2]])
-})
-```
-
-### Grade 12
-
-```{r}
-htmlOutput(outputId = "g12Doc")
-
-reg_F2 <- reactive({
-  lm(get(F2()) ~ get(BY()) + get(F1()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, data = nels88) %>% 
-  summary()
-})
-
-output$g12Doc <- renderUI({
-  HTML(Tbl_Doc(reg_F2(), "12th grade status")[[2]])
-})
-```
-
-### Grade 12 + 2
-
-```{r}
-htmlOutput(outputId = "g14Doc")
-
-reg_F3 <- reactive({
-  lm(get(F3()) ~ get(BY()) + get(F1()) + get(F2()) + sex + race + BY_momedu + BY_dadedu + BY_faminc, 
-     data = nels88) %>% 
-  summary()
-})
-
-output$g14Doc <- renderUI({
-  HTML(Tbl_Doc(reg_F3(), "Grade 12 + 2 status")[[2]])
-})
-```
-
-
-### Grade 12 + 8
-
-```{r}
-htmlOutput(outputId = "g20Doc")
-
-reg_F4 <- reactive({
-  lm(get(F4()) ~ get(BY()) + get(F1()) + get(F2()) + get(F3()) + sex + race + BY_momedu + BY_dadedu + BY_faminc,
-     data = nels88) %>% 
-  summary()
-})
-
-output$g20Doc <- renderUI({
-  HTML(Tbl_Doc(reg_F4(), "Grade 12 + 8 status")[[2]])
-})
-```
-
+-	This section shows how current status is correlated with previous status, by group. The upper left is a coefficient plot which allows the user to compare the magnitude of coefficients across groups, while the table on the right side provides detailed statistics.    
+    
+-	Color. I mapped group to both the x axis and the color channel. It is sometime redundant to use multiple channels representing the same information, but since this graph is faceted, the color channel allows the user to easily concentrate on the same group across facets.    
+    
+-	Axis labels. I intentionally put the labels of y axis (“Coefficients”, the coordinate is flipped) on the top. When user chooses a compare variable with many categories (e.g. mother’s education), the graph will extend very long. If the labels were at the bottom of the graph as usual, the user will have to scroll to the end of the graph to figure out the meaning of the y axis, which is inconvenient.    
+    

@@ -331,11 +331,12 @@ raw_data <- read.csv("data/raw_data.csv") %>%
 
 # Standardize variables
   standardize <- function(v) {
-    return ((v - mean(v, na.rm = TRUE)) / sd(v, na.rm = TRUE))
+    # return ((v - mean(v, na.rm = TRUE)) / sd(v, na.rm = TRUE))
+    return(percent_rank(v))
   }
   
 # Origin Family's SES Percentile
-  raw_data <- mutate(raw_data, Ori_z = BY_SES)
+  raw_data <- mutate(raw_data, Ori_z = standardize(BY_SES))
 
 # BY, F1 and F2 Standardized Test Percentile (composite - reading and math)
   raw_data <- mutate(raw_data, 
